@@ -1,0 +1,63 @@
+The event loop is a fundamental part of asynchronous programming in Node.js. It's essentially a mechanism that allows Node.js to handle multiple tasks simultaneously without blocking the execution of other tasks.
+Exporting in Node.js:
+There are multiple ways to export in Node.js:
+
+CommonJS syntax:
+
+javascript
+
+
+const messages = ['Message 1', 'Message 2'];
+module.exports = messages;
+Using exports object:
+
+javascript
+
+exports.message = 'Hello';
+ES6 syntax:
+
+javascript
+
+
+export const message = 'Hello';
+
+3.const express = require('express');
+const fs = require('fs');
+
+const app = express();
+const PORT = 3000;
+
+app.use(express.urlencoded({ extended: true }));
+app.use(express.static('public'));
+
+function readMessages() {
+  try {
+    return fs.readFileSync('messages/messages.txt', 'utf8').split('\n').filter(Boolean);
+  } catch (error) {
+    console.error('Error reading messages:', error);
+    return [];
+  }
+}
+
+function writeMessage(message) {
+  try {
+    fs.appendFileSync('messages/messages.txt', message + '\n');
+  } catch (error) {
+    console.error('Error writing message:', error);
+  }
+}
+
+app.post('/submit', (req, res) => {
+  const { message } = req.body;
+  if (message) writeMessage(message);
+  res.redirect('/');
+});
+
+app.get('/', (req, res) => {
+  const messages = readMessages();
+  res.sendFile(__dirname + '/public/index.html');
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
