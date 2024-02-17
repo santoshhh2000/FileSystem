@@ -1,0 +1,69 @@
+const express = require('express');
+const fs = require('fs');
+
+const app = express();
+const PORT = 3000;
+
+app.use(express.urlencoded({ extended: true }));
+
+function readMessagesFromFile() {
+  try {
+    const messages = fs.readFileSync('messages.txt', 'utf8').split('\n').filter(Boolean);
+    return messages;
+  } catch (error) {
+    console.error('Error reading messages from file:', error);
+    return [];
+  }
+}
+
+function writeMessageToFile(message) {
+  try {
+    fs.appendFileSync('messages.txt', message + '\n');
+  } catch (error) {
+    console.error('Error writing message to file:', error);
+  }
+}
+
+function redirectWithMessage(res, url, message) {
+  res.writeHead(302, { Location: url, 'Content-Type': 'text/plain' });
+  res.end(message);
+}
+
+app.post('/submit', (req, res) => {
+  const { message } = req.body;
+  if (message) {
+    writeMessageToFile(message);
+  }
+  redirectWithMessage(res, '/', 'Message submitted successfully');
+});
+
+app.get('/', (req, res) => {
+  const messages = readMessagesFromFile();
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Message Form</title>
+    </head>
+    <body>
+      <form action="/submit" method="post">
+        <textarea name="message" rows="4" cols="50" placeholder="Enter your message"></textarea><br>
+        <button type="submit">Submit</button>
+      </form>
+
+      <div>
+        <h2>Messages:</h2>
+        <ul>
+          ${messages.map(message => `<li>${message}</li>`).join('')}
+        </ul>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
